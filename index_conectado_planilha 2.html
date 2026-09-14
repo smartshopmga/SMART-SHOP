@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Shop | Ofertas</title>
+<meta name="description" content="Smart Shop - celulares, iPhones, Xiaomi, POCO, tablets, relógios, fones e acessórios.">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f5f5;color:#171717}
+header{background:#111;color:#fff;padding:28px 18px;text-align:center}
+header h1{margin:0;font-size:30px}
+header p{margin:8px 0 0;color:#d7d7d7}
+.wrap{max-width:1150px;margin:auto;padding:18px}
+.notice{background:#fff;border-radius:16px;padding:16px;margin:16px 0;box-shadow:0 3px 14px rgba(0,0,0,.06)}
+.search{width:100%;padding:14px 16px;border:1px solid #ddd;border-radius:12px;font-size:16px;outline:none}
+.tabs{display:flex;gap:8px;overflow:auto;padding:5px 0 12px;position:sticky;top:0;background:#f5f5f5;z-index:5}
+.tab{border:0;background:#fff;border-radius:999px;padding:11px 16px;white-space:nowrap;cursor:pointer;font-weight:700}
+.tab.active{background:#111;color:#fff}
+.status{text-align:center;padding:28px;color:#666}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:14px}
+.card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 3px 14px rgba(0,0,0,.07);display:flex;flex-direction:column;min-height:190px}
+.cat{font-size:12px;color:#777;font-weight:700;text-transform:uppercase;margin-bottom:8px}
+.name{font-size:17px;font-weight:800;line-height:1.25;margin-bottom:8px}
+.info{font-size:13px;color:#666;line-height:1.5;min-height:20px}
+.price{font-size:24px;font-weight:900;margin:14px 0}
+.badge{display:inline-block;background:#111;color:#fff;border-radius:7px;padding:5px 8px;font-size:11px;font-weight:800;margin-left:5px}
+.btn{margin-top:auto;display:block;text-align:center;background:#19a463;color:#fff;text-decoration:none;border-radius:10px;padding:12px;font-weight:800}
+footer{text-align:center;color:#666;font-size:13px;padding:30px 18px}
+.error{color:#b00020}
+</style>
+</head>
+<body>
+<header>
+  <h1>📱🔥 SMART SHOP 🔥📱</h1>
+  <p>Originais • Novos • Lacrados • Versão Global</p>
+  <p>📲 WhatsApp: (44) 8856-1125</p>
+</header>
+
+<main class="wrap">
+  <div class="notice">
+    <input id="search" class="search" type="search" placeholder="🔎 Buscar produto...">
+  </div>
+
+  <div id="tabs" class="tabs"></div>
+  <div id="status" class="status">Carregando ofertas...</div>
+  <div id="grid" class="grid"></div>
+
+  <div class="notice">
+    <strong>📌 Informações</strong><br><br>
+    Valores sujeitos a alteração.<br>
+    Todos os aparelhos: versão global, originais, novos e lacrados.<br>
+    Garantia conforme informado na listagem.<br>
+    Até 18x no cartão com acréscimo da máquina.<br>
+    Entrega grátis em Maringá, Sarandi e Paiçandu. Outras regiões: consultar frete.
+  </div>
+</main>
+
+<footer>SMART SHOP • Ofertas atualizadas pela nossa equipe</footer>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbz-AMSYyoK1eusvm2AvrSgKPt4e9uTj4wqT0hPCBeydI_QnY2Vyxhcbiggbcg4I5eSiRw/exec';
+const WHATSAPP = '554488561125';
+
+let produtos = [];
+let categoriaAtual = "Todos";
+
+function normalizarCategoria(cat, produto) {
+  const t = ((cat || "") + " " + (produto || "")).toLowerCase();
+
+  if (t.includes("iphone")) return "iPhone";
+  if (t.includes("apple watch")) return "Apple Watch";
+  if (t.includes("airpods") || (t.includes("apple") && t.includes("fone"))) return "Fones Apple";
+  if (t.includes("ipad")) return "iPad";
+  if (t.includes("acess")) return "Acessórios";
+  if (t.includes("poco")) return "POCO";
+  if (t.includes("tablet") || t.includes("pad")) return "Tablets";
+  if (t.includes("watch") || t.includes("smart band") || t.includes("smartwatch") || t.includes("amazfit")) return "Smartwatches";
+  if (t.includes("fone") || t.includes("buds") || t.includes("earbuds")) return "Fones";
+  if (t.includes("xiaomi") || t.includes("redmi")) {
+    if (t.includes("note")) return "Xiaomi / Redmi";
+    return "Xiaomi / Redmi";
+  }
+  return cat || "Outros";
+}
+
+function formatarPreco(valor) {
+  if (typeof valor === "number") {
+    return valor.toLocaleString("pt-BR", {style:"currency", currency:"BRL"});
+  }
+  const s = String(valor ?? "").trim();
+  if (!s) return "Consultar";
+  if (s.toLowerCase().startsWith("r$")) return s;
+  const n = Number(s.replace(/\./g,"").replace(",","."));
+  if (!Number.isNaN(n)) return n.toLocaleString("pt-BR", {style:"currency",currency:"BRL"});
+  return s;
+}
+
+function whatsappLink(p) {
+  const msg = `Olá! Tenho interesse no ${p.produto}, no valor de ${formatarPreco(p.preco)}. Gostaria de saber mais informações.`;
+  return `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
+}
+
+function montarCategorias() {
+  const cats = ["Todos", ...new Set(produtos.map(p => p.categoriaSite))];
+  const tabs = document.getElementById("tabs");
+  tabs.innerHTML = cats.map(c => `<button class="tab ${c === "Todos" ? "active" : ""}" data-cat="${c}">${c}</button>`).join("");
+  tabs.querySelectorAll(".tab").forEach(btn => {
+    btn.onclick = () => {
+      categoriaAtual = btn.dataset.cat;
+      tabs.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      render();
+    };
+  });
+}
+
+function render() {
+  const busca = document.getElementById("search").value.toLowerCase().trim();
+  const lista = produtos.filter(p => {
+    const okCat = categoriaAtual === "Todos" || p.categoriaSite === categoriaAtual;
+    const texto = `${p.produto} ${p.categoria} ${p.memoria} ${p.observacao}`.toLowerCase();
+    return okCat && texto.includes(busca);
+  });
+
+  const grid = document.getElementById("grid");
+  document.getElementById("status").style.display = "none";
+
+  if (!lista.length) {
+    grid.innerHTML = '<div class="status" style="grid-column:1/-1">Nenhum produto encontrado.</div>';
+    return;
+  }
+
+  grid.innerHTML = lista.map(p => {
+    const detalhes = [p.memoria, p.observacao].filter(Boolean).join(" • ");
+    const status = p.status && String(p.status).toLowerCase() !== "novo"
+      ? `<span class="badge">${p.status}</span>` : "";
+    return `<article class="card">
+      <div class="cat">${p.categoriaSite}</div>
+      <div class="name">${escapeHtml(p.produto)} ${status}</div>
+      <div class="info">${escapeHtml(detalhes)}</div>
+      <div class="price">${escapeHtml(formatarPreco(p.preco))}</div>
+      <a class="btn" href="${whatsappLink(p)}" target="_blank" rel="noopener">QUERO ESTE</a>
+    </article>`;
+  }).join("");
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+}
+
+async function carregar() {
+  try {
+    const resp = await fetch(API_URL, {cache:"no-store"});
+    if (!resp.ok) throw new Error("Erro HTTP " + resp.status);
+    const dados = await resp.json();
+
+    produtos = dados
+      .filter(p => p && p.produto)
+      .map(p => ({...p, categoriaSite: normalizarCategoria(p.categoria, p.produto)}));
+
+    montarCategorias();
+    render();
+  } catch (e) {
+    document.getElementById("status").innerHTML =
+      `<div class="error"><strong>Não foi possível carregar os produtos.</strong><br><br>Atualize a página ou tente novamente mais tarde.</div>`;
+    console.error(e);
+  }
+}
+
+document.getElementById("search").addEventListener("input", render);
+carregar();
+</script>
+</body>
+</html>
