@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Shop | Ofertas</title>
+<meta name="description" content="Smart Shop — celulares, iPhones, Xiaomi, POCO, tablets, fones e smartwatches.">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f6f8;color:#171717}
+header{background:#111;color:#fff;padding:28px 18px;text-align:center;position:sticky;top:0;z-index:10}
+header h1{margin:0;font-size:30px}header p{margin:7px 0 0;color:#d7d7d7}
+.wrap{max-width:1100px;margin:auto;padding:18px}
+.notice{background:#fff;border-radius:16px;padding:16px;margin:16px 0;box-shadow:0 3px 14px #00000012}
+.tabs{display:flex;gap:8px;overflow:auto;padding-bottom:5px;position:sticky;top:91px;background:#f5f6f8;z-index:5;padding-top:4px}
+.tab{border:0;background:#fff;border-radius:999px;padding:11px 16px;white-space:nowrap;font-weight:700;cursor:pointer}
+.tab.active{background:#111;color:#fff}
+.search{width:100%;padding:14px 16px;border:1px solid #ddd;border-radius:12px;font-size:16px;margin:14px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.card{background:#fff;border-radius:17px;padding:17px;box-shadow:0 3px 14px #00000012;display:flex;flex-direction:column;min-height:190px}
+.badge{font-size:11px;font-weight:800;letter-spacing:.4px;margin-bottom:8px}
+.card h3{font-size:17px;margin:0 0 8px;line-height:1.25}
+.price{font-size:23px;font-weight:900;margin:8px 0 14px}
+.info{font-size:13px;color:#666;flex:1}
+.buy{display:block;text-align:center;text-decoration:none;background:#16a34a;color:#fff;font-weight:800;padding:12px;border-radius:11px}
+footer{margin-top:28px;background:#111;color:#fff;padding:26px 18px;text-align:center;font-size:14px;line-height:1.6}
+.small{font-size:12px;color:#777}
+</style>
+</head>
+<body>
+<header>
+  <h1>📱 SMART SHOP</h1>
+  <p>Originais • Novos • Lacrados • Versão Global</p>
+</header>
+<main class="wrap">
+  <div class="notice">
+    <strong>🔥 Ofertas Smart Shop</strong><br>
+    Valores em dinheiro ou PIX. Valores sujeitos a alteração.
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <input class="search" id="search" placeholder="🔎 Pesquisar aparelho, modelo ou memória...">
+  <div class="grid" id="products"></div>
+</main>
+<footer>
+  <strong>🛡️ COMPRE COM SEGURANÇA</strong><br>
+  Xiaomi/POCO: garantia de 90 dias. Apple: 1 ano de garantia pelo fabricante.<br>
+  💳 Parcelamento em até 18x com acréscimos da máquina.<br>
+  🚚 Entrega grátis em Maringá, Sarandi e Paiçandu. Outras regiões: consultar taxa.
+</footer>
+
+<script>
+const WA="554488561125";
+const data=[
+["Xiaomi / Redmi","REDMI A7 PRO 4G 4RAM 64GB",725,""],
+["Xiaomi / Redmi","REDMI A7 PRO 4G 4RAM 128GB",795,""],
+["Xiaomi / Redmi","REDMI 15C 4G 4RAM 128GB",865,""],
+["Xiaomi / Redmi","REDMI 15C 4G 8RAM 256GB",1035,""],
+["Xiaomi / Redmi","REDMI 15 4G 6RAM 128GB",1020,""],
+["Xiaomi / Redmi","REDMI 15 4G 8RAM 256GB",1180,""],
+["Xiaomi / Redmi","REDMI NOTE 14 5G NFC 8RAM 256GB",1385,""],
+["Xiaomi / Redmi","REDMI NOTE 15 4G 6RAM 128GB",1165,""],
+["Xiaomi / Redmi","REDMI NOTE 15 4G NFC 6RAM 128GB",1185,""],
+["Xiaomi / Redmi","REDMI NOTE 15 4G 8RAM 256GB",1320,""],
+["Xiaomi / Redmi","REDMI NOTE 15 4G NFC 8RAM 256GB",1340,""],
+["Xiaomi / Redmi","REDMI NOTE 15 PRO 4G NFC 8RAM 256GB",1660,""],
+["Xiaomi / Redmi","REDMI NOTE 15 PRO 4G NFC 12RAM 512GB",1790,""],
+["Xiaomi / Redmi","REDMI NOTE 15 PRO 5G NFC 8RAM 256GB",1870,""],
+["Xiaomi / Redmi","REDMI NOTE 15 PRO 5G NFC 8RAM 512GB",2030,""],
+["Xiaomi / Redmi","REDMI NOTE 15 PRO+ 5G NFC 8RAM 256GB",2070,"PLUS"],
+["Xiaomi / Redmi","REDMI NOTE 15 PRO+ 5G NFC 12RAM 512GB",2440,"PLUS"],
+["Xiaomi / Redmi","REDMI 17 4G 4RAM 128GB",1015,"LANÇAMENTO"],
+["Xiaomi / Redmi","REDMI 17 4G 4RAM 256GB",1200,"LANÇAMENTO"],
+["Xiaomi / Redmi","REDMI 17 4G 6RAM 256GB",1325,"LANÇAMENTO"],
+["Xiaomi / Redmi","REDMI NOTE 17 4G 8RAM 256GB",1555,"LANÇAMENTO"],
+["Xiaomi / Redmi","REDMI NOTE 17 5G NFC 6RAM 128GB",1480,"LANÇAMENTO"],
+["Xiaomi / Redmi","REDMI NOTE 17 5G NFC 8RAM 256GB",1865,"LANÇAMENTO"],
+["Xiaomi / Redmi","REDMI NOTE 17 PRO 5G NFC 8RAM 256GB",2070,"LANÇAMENTO"],
+["Xiaomi / Redmi","REDMI NOTE 17 PRO 5G NFC 8RAM 512GB",2480,"LANÇAMENTO"],
+["Xiaomi / Redmi","REDMI NOTE 17 PRO MAX 5G NFC 8RAM 256GB",2560,"LANÇAMENTO"],
+["Xiaomi / Redmi","REDMI NOTE 17 PRO MAX 5G NFC 8RAM 512GB",2920,"LANÇAMENTO"],
+["POCO","POCO C71 4G 3RAM 64GB",690,""],
+["POCO","POCO C81 PRO 4G 4RAM 64GB",715,""],
+["POCO","POCO C81 PRO 4G 4RAM 128GB",810,""],
+["POCO","POCO C81 PRO 4G 4RAM 256GB",980,""],
+["POCO","POCO C85 4G 6RAM 128GB",895,""],
+["POCO","POCO C85 4G 8RAM 256GB",1040,""],
+["POCO","POCO M8S 5G NFC 6RAM 128GB",1195,""],
+["POCO","POCO M8S 5G NFC 8RAM 256GB",1405,""],
+["POCO","POCO M8 5G NFC 8RAM 256GB",1415,""],
+["POCO","POCO M8 5G NFC 8RAM 512GB",1530,""],
+["POCO","POCO M8 PRO 5G NFC 12RAM 512GB",1930,""],
+["POCO","POCO X7 PRO 5G NFC 12RAM 512GB",2140,""],
+["POCO","POCO X8 5G NFC 8RAM 256GB",1775,"LANÇAMENTO"],
+["POCO","POCO X8 PRO 5G NFC 8RAM 256GB",2280,""],
+["POCO","POCO X8 PRO 5G NFC 8RAM 512GB",2460,""],
+["POCO","POCO X8 PRO 5G NFC 12RAM 512GB",2555,""],
+["POCO","POCO X8 PRO MAX 5G NFC 12RAM 256GB",2955,""],
+["POCO","POCO X8 PRO MAX 5G NFC 12RAM 512GB",3160,""],
+["POCO","POCO F8 ULTRA 5G 16RAM 512GB",4650,""],
+["POCO","POCO F9 ULTRA 5G 16RAM 512GB",5210,"LANÇAMENTO"],
+["Tablets","REDMI PAD 2 4RAM 128GB",1160,""],
+["Tablets","REDMI PAD 2 4RAM 256GB",1260,""],
+["Tablets","REDMI PAD 2 PRO 8RAM 256GB",1740,""],
+["Fones","FONE REDMI BUDS 6 PLAY",185,""],
+["Fones","FONE BLACK SHARK BUDS 6 ANC",225,""],
+["Smartwatches","XIAOMI SMART BAND 9 ACTIV",225,""],
+["Smartwatches","REDMI WATCH 5 ACTIV",280,""],
+["Smartwatches","REDMI WATCH 5 LITE",375,""],
+["Smartwatches","SMART BAND 9 PRO",420,""],
+["Smartwatches","REDMI WATCH 6",590,""],
+["Smartwatches","AMAZFIT T-REX ULTRA",1650,""],
+["Smartwatches","AMAZFIT T-REX 3 PRO 48MM",1680,""],
+["iPhone","IPHONE 15 128GB BLACK",3960,""],
+["iPhone","IPHONE 16 128GB BLACK",4995,""],
+["iPhone","IPHONE 16 128GB WHITE",4995,""],
+["iPhone","IPHONE 17E 256GB WHITE",3990,""],
+["iPhone","IPHONE 17 256GB SAGE",5090,""],
+["iPhone","IPHONE 17 256GB BLUE",5120,""],
+["iPhone","IPHONE 17 256GB LAVANDER",5135,""],
+["iPhone","IPHONE 17 256GB BLACK",5160,""],
+["iPhone","IPHONE 17 256GB WHITE",5180,""],
+["iPhone","IPHONE 17 PRO MAX 256GB ORANGE",7240,""],
+["iPhone","IPHONE 17 PRO MAX 256GB WHITE",7290,""],
+["Apple Watch","APPLE WATCH SE 3° 40MM GPS STARLIGHT",1670,""],
+["Apple Watch","APPLE WATCH S11 42MM GPS SPORT ROSE/GOLD",2040,""],
+["Apple Watch","APPLE WATCH S11 46MM GPS SPORT JET BLACK",2355,""],
+["Fones Apple","APPLE FONE AIRPODS 4 ANC",1270,""],
+["Fones Apple","APPLE FONE AIRPODS PRO 3",1500,""],
+["iPad","IPAD 11ª WI-FI 128GB YELLOW",2595,""],
+["iPad","IPAD 11ª WI-FI 128GB SILVER",2730,""],
+["Acessórios","FONTE APPLE ORIGINAL 20W",190,""],
+["Acessórios","CABO APPLE ORIGINAL USB-C/USB-C",220,""],
+["Acessórios","FONTE APPLE 30W IPAD / MACBOOK",300,""]
+];
+
+const categories=["Todos",...new Set(data.map(x=>x[0]))];
+let active="Todos";
+const money=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+function renderTabs(){
+ document.getElementById("tabs").innerHTML=categories.map(c=>`<button class="tab ${c===active?"active":""}" onclick="setCat('${c.replaceAll("'","\\'")}')">${c}</button>`).join("");
+}
+function setCat(c){active=c;renderTabs();render();}
+function render(){
+ const q=document.getElementById("search").value.toLowerCase().trim();
+ const list=data.filter(x=>(active==="Todos"||x[0]===active)&&x[1].toLowerCase().includes(q));
+ document.getElementById("products").innerHTML=list.map(x=>{
+   const msg=`Olá! Tenho interesse no ${x[1]}, no valor de ${money(x[2])}. Gostaria de saber mais informações.`;
+   const url=`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`;
+   return `<article class="card"><div class="badge">${x[0].toUpperCase()} ${x[3]?`• ${x[3]}`:""}</div><h3>${x[1]}</h3><div class="info">Novo • Lacrado • Original</div><div class="price">${money(x[2])}</div><a class="buy" target="_blank" href="${url}">QUERO ESTE</a></article>`;
+ }).join("") || `<div class="notice">Nenhum produto encontrado.</div>`;
+}
+document.getElementById("search").addEventListener("input",render);
+renderTabs();render();
+</script>
+</body>
+</html>
