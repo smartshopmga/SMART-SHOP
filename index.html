@@ -1,1 +1,123 @@
-file:///Users/novousuario/Downloads/index_conectado_smart_shop.html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Shop | Ofertas</title>
+<meta name="description" content="Smart Shop — celulares, iPhones, Xiaomi, POCO, tablets, fones e smartwatches.">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f6f8;color:#171717}
+header{background:#111;color:#fff;padding:28px 18px;text-align:center;position:sticky;top:0;z-index:10}
+header h1{margin:0;font-size:30px}header p{margin:7px 0 0;color:#d7d7d7}
+.wrap{max-width:1100px;margin:auto;padding:18px}
+.notice{background:#fff;border-radius:16px;padding:16px;margin:16px 0;box-shadow:0 3px 14px #00000012}
+.tabs{display:flex;gap:8px;overflow:auto;padding-bottom:5px;position:sticky;top:91px;background:#f5f6f8;z-index:5;padding-top:4px}
+.tab{border:0;background:#fff;border-radius:999px;padding:11px 16px;white-space:nowrap;font-weight:700;cursor:pointer}
+.tab.active{background:#111;color:#fff}
+.search{width:100%;padding:14px 16px;border:1px solid #ddd;border-radius:12px;font-size:16px;margin:14px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.card{background:#fff;border-radius:17px;padding:17px;box-shadow:0 3px 14px #00000012;display:flex;flex-direction:column;min-height:190px}
+.badge{font-size:11px;font-weight:800;letter-spacing:.4px;margin-bottom:8px}
+.card h3{font-size:17px;margin:0 0 8px;line-height:1.25}
+.price{font-size:23px;font-weight:900;margin:8px 0 14px}
+.info{font-size:13px;color:#666;flex:1}
+.buy{display:block;text-align:center;text-decoration:none;background:#16a34a;color:#fff;font-weight:800;padding:12px;border-radius:11px}
+footer{margin-top:28px;background:#111;color:#fff;padding:26px 18px;text-align:center;font-size:14px;line-height:1.6}
+.small{font-size:12px;color:#777}
+</style>
+</head>
+<body>
+<header>
+  <h1>📱 SMART SHOP</h1>
+  <p>Originais • Novos • Lacrados • Versão Global</p>
+</header>
+<main class="wrap">
+  <div class="notice">
+    <strong>📲 Escolha seu produto e fale conosco pelo WhatsApp.</strong><br>
+    Valores sujeitos a alteração.
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <input class="search" id="search" placeholder="🔎 Pesquisar aparelho, modelo ou memória...">
+  <div class="grid" id="products"></div>
+</main>
+<footer>
+  <strong>🛡️ COMPRE COM SEGURANÇA</strong><br>
+  Xiaomi/POCO: garantia de 90 dias. Apple: 1 ano de garantia pelo fabricante.<br>
+  💳 Parcelamento em até 18x com acréscimos da máquina.<br>
+  🚚 Entrega grátis em Maringá, Sarandi e Paiçandu. Outras regiões: consultar taxa.
+</footer>
+
+<script>
+const WA="554488561125";
+const API="https://script.google.com/macros/s/AKfycbz-AMSYyoK1eusvm2AvrSgKPt4e9uTj4wqT0hPCBeydI_QnY2Vyxhcbiggbcg4I5eSiRw/exec";
+let data=[];
+let active="Todos";
+
+function cleanCategory(c){
+  const x=String(c||"").trim().toLowerCase();
+  if(x.includes("poco")) return "POCO";
+  if(x.includes("iphone") || x.includes("iphone")) return "iPhone";
+  if(x.includes("apple watch")) return "Apple Watch";
+  if(x.includes("fone apple") || x.includes("airpods")) return "Fones Apple";
+  if(x.includes("ipad")) return "iPad";
+  if(x.includes("tablet") || x.includes("redmi pad")) return "Tablets";
+  if(x.includes("acess")) return "Acessórios";
+  if(x.includes("smartwatch") || x.includes("relógio") || x.includes("watch") || x.includes("band")) return "Smartwatches";
+  if(x.includes("fone") || x.includes("buds")) return "Fones";
+  return "Xiaomi / Redmi";
+}
+
+function normalizeProduct(x){
+  const produto=x.produto ?? x.Produto ?? x[0] ?? "";
+  const categoria=cleanCategory(x.categoria ?? x.Categoria ?? x[1]);
+  let preco=x.preco ?? x.Preço ?? x.preço ?? x[2] ?? "";
+  if(typeof preco === "string"){
+    const t=preco.replace(/R\$\s*/g," ").replace(/\./g,"").replace(",",".").trim();
+    const n=Number(t);
+    if(!Number.isNaN(n)) preco=n;
+  }
+  const status=x.status ?? x.Status ?? x[3] ?? "";
+  const memoria=x.memoria ?? x.Memória ?? x[4] ?? "";
+  const observacao=x.observacao ?? x.Observação ?? x.observacao ?? x[5] ?? "";
+  return {produto:String(produto),categoria,preco:Number(preco)||0,status:String(status||""),memoria:String(memoria||""),observacao:String(observacao||"")};
+}
+
+const money=v=>Number(v).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+
+function renderTabs(){
+  const categories=["Todos",...new Set(data.map(x=>x.categoria))];
+  document.getElementById("tabs").innerHTML=categories.map(c=>`<button class="tab ${c===active?"active":""}" onclick="setCat(${JSON.stringify(c)})">${esc(c)}</button>`).join("");
+}
+function setCat(c){active=c;renderTabs();render();}
+function render(){
+  const q=document.getElementById("search").value.toLowerCase().trim();
+  const list=data.filter(x=>(active==="Todos"||x.categoria===active)&&x.produto.toLowerCase().includes(q));
+  document.getElementById("products").innerHTML=list.map(x=>{
+    const detalhes=[x.memoria,x.observacao].filter(Boolean).join(" • ");
+    const msg=`Olá! Tenho interesse no ${x.produto}, no valor de ${money(x.preco)}. Gostaria de saber mais informações.`;
+    const url=`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`;
+    return `<article class="card"><div class="badge">${esc(x.categoria.toUpperCase())}${x.status?` • ${esc(x.status)}`:""}</div><h3>${esc(x.produto)}</h3><div class="info">${detalhes?esc(detalhes):"Novo • Lacrado • Original"}</div><div class="price">${money(x.preco)}</div><a class="buy" target="_blank" rel="noopener" href="${url}">QUERO ESTE</a></article>`;
+  }).join("") || `<div class="notice">Nenhum produto encontrado.</div>`;
+}
+
+async function carregarProdutos(){
+  document.getElementById("products").innerHTML='<div class="notice">⏳ Carregando produtos...</div>';
+  try{
+    const r=await fetch(API,{cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const json=await r.json();
+    if(!Array.isArray(json)) throw new Error("Resposta inválida");
+    data=json.map(normalizeProduct).filter(x=>x.produto);
+    renderTabs();render();
+  }catch(e){
+    console.error(e);
+    document.getElementById("products").innerHTML='<div class="notice">⚠️ Não foi possível carregar os produtos agora. Tente atualizar a página.</div>';
+  }
+}
+
+document.getElementById("search").addEventListener("input",render);
+carregarProdutos();
+</script>
+</body>
+</html>
